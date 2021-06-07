@@ -2,22 +2,29 @@ import { AuthCredentialsDto } from './dto/auth_credentials.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { EntityRepository, Repository } from "typeorm";
-import { ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, HttpCode, HttpStatus, InternalServerErrorException } from '@nestjs/common';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User>{
-  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
-    const { username, password } = authCredentialsDto;
+  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<any> {
+    const { firstName, lastName, email, password } = authCredentialsDto;
     const user = new User();
-    user.username = username;
+    user.email = email;
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.isVerified = false;
     user.salt = await bcrypt.genSalt();
     user.password = await this.hashPassword(password, user.salt);
 
     try {
-      await user.save()
+      await user.save();
+      return {
+        statusCode : HttpStatus.OK,
+        data: 'Registered Successfully'
+      }
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('User name exists');
+        throw new ConflictException('User exists');
       } else {
         throw new InternalServerErrorException();
       }
@@ -25,11 +32,11 @@ export class UserRepository extends Repository<User>{
   }
 
   async validateUserPassword(authCredentialsDto: AuthCredentialsDto): Promise<string>{
-    const {username, password} = authCredentialsDto;
-    const user = await this.findOne({username});
+    const {email, password} = authCredentialsDto;
+    const user = await this.findOne({email});
 
     if(user && await user.validatePassword(password)){
-      return username
+      return email
     } else {
       return null
     }

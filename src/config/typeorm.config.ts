@@ -6,7 +6,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   port: 5432,
   username: 'postgres',
   password: 'postgres',
-  database: 'taskmanagement',
+  database: 'keychron',
   // entities: [__dirname + '/../**/*.entity.ts'],
   autoLoadEntities: true,
   synchronize: true
